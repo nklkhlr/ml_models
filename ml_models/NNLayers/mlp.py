@@ -8,7 +8,7 @@ jax_seed = jax.random.PRNGKey(12)
 
 class MLPLayer:
     def __init__(self, input_dim, output_dim, activiation):
-        self.weights = jax.random.normal(jax_seed, (output_dim, input_dim))
+        self.weights = jax.random.normal(jax_seed, (input_dim, output_dim))
         self.bias = jax.random.normal(jax_seed, (1,))
         self.activation = activiation
 
@@ -25,7 +25,9 @@ class MLPLayer:
 
     @staticmethod
     def forward(params, X, activation):
-        return activation(params['weights'].dot(X) + params['bias'])
+        lin_pass = jnp.dot(params['weights'].T, X)
+        lin_pass += params['bias']
+        return activation(lin_pass)
 
 
 class MLP(BaseModel):
@@ -36,7 +38,7 @@ class MLP(BaseModel):
             if i == 0:
                 self.layers.append(MLPLayer(input_dim, hidden_sizes[0], activation_function))
             else:
-                self.layers.append(MLPLayer(input_dim, hidden_sizes[i - 1], activation_function))
+                self.layers.append(MLPLayer(hidden_sizes[i - 1], hidden_sizes[i], activation_function))
         self.activation_function = activation_function
 
     @property

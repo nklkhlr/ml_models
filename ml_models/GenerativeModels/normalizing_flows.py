@@ -38,7 +38,7 @@ class NormalizingFlowModel:
     def params(self) -> dict:
         raise NotImplemented
 
-    def set_params(self, params: dict):
+    def update_parameters(self, params: dict):
         raise NotImplemented
 
     def _reset_model_parameters_(self, *args, **kwargs):
@@ -75,9 +75,9 @@ class PlanarFlow(NormalizingFlowModel):
         self.distribution = None
 
     def _reset_model_parameters_(self, input_dim):
-        self.weights = jax.random.uniform(jax_seed, (input_dim,))
-        self.bias = jax.random.uniform(jax_seed, (1,))[0]
-        self.u = jax.random.uniform(jax_seed, (input_dim,))
+        self.weights = jax.random.uniform(jax_seed, (input_dim,), minval=-1, maxval=1)
+        self.bias = jax.random.uniform(jax_seed, (1,), minval=-1, maxval=1)[0]
+        self.u = jax.random.uniform(jax_seed, (input_dim,), minval=-1, maxval=1)
 
     @property
     def params(self) -> dict:
@@ -87,7 +87,7 @@ class PlanarFlow(NormalizingFlowModel):
             'u': self.u
         }
 
-    def set_params(self, params: dict):
+    def update_parameters(self, params: dict):
         self.weights = params['weights']
         self.bias = params['bias']
         self.u = params['u']
@@ -141,6 +141,9 @@ class RealNVP(NormalizingFlowModel):
     def params(self):
         return self.neural_net.parameters
 
+    def update_parameters(self, params, *args, **kwargs):
+        self.neural_net.update_parameters(params)
+
     @staticmethod
     @jax.jit
     def forward_log_shift(X, shift, log_scale):
@@ -148,9 +151,21 @@ class RealNVP(NormalizingFlowModel):
 
     def forward(self, params, X):
         x1, x2 = jnp.split(X.T, 2, axis=-1)
-        shift_, scale_ = self.neural_net.forward()(params, x2)
-        y_ = self.forward_log_shift(x1, shift_, scale_)
-        return jnp.concatenate([y_, x2], axis=-1)
+        shift_, scale_ = self.neural_net.forward()(params, x2.T)
+        y_ = self.forward_log_shift(x1.T, shift_, scale_)
+        return jnp.concatenate([y_, x2.T], axis=-1)
+
+    def forward_fun(self):
+        nn = self.neural_net.forward()
+        shift = self.forward_log_shift
+
+        def _forward_fun(params, X):
+            x1, x2 = jnp.split(X.T, 2, axis=-1)
+            shift_, scale_ = nn(params, x2.T)
+            y_ = shift(x1.T, shift_, scale_)
+            return jnp.concatenate([y_, x2.T], axis=-1)
+
+        return _forward_fun
 
     @staticmethod
     @jax.jit
@@ -163,13 +178,29 @@ class RealNVP(NormalizingFlowModel):
         x_ = self.inverse_log_shift(y1, shift_, scale_)
         return jnp.concatenate([x_, y2], axis=-1)
 
+    def inverse_fun(self):
+        nn = self.neural_net.forward()
+        shift = self.inverse_log_shift
+
+        def _inverse_fun(params, X):
+            x1, x2 = jnp.split(X.T, 2, axis=-1)
+            shift_, scale_ = nn(params, x2.T)
+            y_ = shift(x1.T, shift_, scale_)
+            return jnp.concatenate([y_, x2.T], axis=-1)
+
+        return _inverse_fun
+
     @staticmethod
     def neg_log_det_jacobian(params, X, forward_fun):
-        return -jnp.log(jnp.linalg.det(jax.jacfwd(forward_fun)(params, X)))
+        jacobian = jax.jacfwd(lambda x: forward_fun(params, x))
+        jac_vmap = jax.vmap(jacobian)
+        return -jnp.log(jnp.linalg.det(jac_vmap(X)))
 
     @staticmethod
     def log_det_jacobian(params, X, inverse_fun):
-        return jnp.log(jnp.linalg.det(jax.jacfwd(inverse_fun)(params, X)))
+        jacobian = jax.jacfwd(lambda x: inverse_fun(params, x))(X)
+        jac_vmap = jax.vmap(jacobian)
+        return jnp.log(jnp.linalg.det(jac_vmap(X)))
 
 
 class MAF(NormalizingFlowModel):
@@ -210,11 +241,11 @@ class NormalizingFlow(BaseModel):
         for model, model_params in zip(layers, params):
             if isinstance(model, PlanarFlow):
                 model_params = model.keep_invertible(model_params)
-                z = model.forward(model_params, z)
                 distortion += model.neg_log_det_jacobian(model_params, z)
-            elif isinstance(model, RealNVP):
                 z = model.forward(model_params, z)
-                distortion += model.neg_log_det_jacobian(model_params, z, model.forward)
+            elif isinstance(model, RealNVP):
+                distortion += model.neg_log_det_jacobian(model_params, z, model.forward_fun())
+                z = model.forward(model_params, z)
         return z, distortion
 
     @staticmethod
@@ -224,11 +255,11 @@ class NormalizingFlow(BaseModel):
         for model, model_params in zip(layers, params):
             if isinstance(model, PlanarFlow):
                 model_params = model.keep_invertible(model_params)
-                z = model.inverse(model_params, z)
                 distortion += model.log_det_jacobian(model_params, z)
-            elif isinstance(model, RealNVP):
                 z = model.inverse(model_params, z)
-                distortion += model.log_det_jacobian(model_params, z, model.inverse())
+            elif isinstance(model, RealNVP):
+                distortion += model.log_det_jacobian(model_params, z, model.inverse_fun())
+                z = model.inverse(model_params, z)
         return z, distortion
 
     def train(self):
@@ -257,6 +288,10 @@ class NormalizingFlow(BaseModel):
                 # NOTE: no need to return distortion factor
                 return transformation(params, layers, samples)[0]
         return _loss
+
+    def update_parameters(self, params, *args, **kwargs):
+        for layer, layer_params in zip(self.layers, params):
+            layer.update_parameters(layer_params)
 
 
 @jax.jit

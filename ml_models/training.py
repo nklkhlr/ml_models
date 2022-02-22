@@ -57,6 +57,7 @@ class Trainer:
                     self.eval(X[:, self.test_samples], y=y),
                     self.loss(model_params, X[:, self.test_samples], y=y)
                 )
+        self.model.update_parameters(model_params)
 
     # def lax_train(self, X: jnp.ndarray, y):
     #     def _train_(state):
