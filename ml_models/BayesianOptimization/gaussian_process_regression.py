@@ -4,19 +4,19 @@ from typing import Union
 from tqdm import trange
 from ml_models.BayesianOptimization import (
     Prior, Acquisition,
-    matern, rbf
+    matern_kernel, rbf_kernel
 )
 
 
 class GPR:
     """
-    basic Gaussian Process Regression
+    Basic Gaussian Process Regression
     """
     def __init__(
         self, prior_distribution: Prior,
         acquisition: Acquisition,
         mean_kernel,
-        cov_kernel: Union[matern, rbf],
+        cov_kernel: Union[matern_kernel, rbf_kernel],
         n_restarts: int = 5,
         alpha: float = 1e-10
     ):
