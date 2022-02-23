@@ -15,7 +15,13 @@ def gaussian_kernel(
     x: jnp.ndarray, x_prime: jnp.ndarray,
     alpha_0: float, alpha: jnp.ndarray
 ):
-    """
+    r"""
+    Guassian kernel defined as
+
+    ..math::
+        \Sigma(x,x') \coloneqq \alpha_0 exp\left(-||x - x'||^2\right)
+
+    where :math:`||x - x'||^2 = \sum_{i=1}^d \alpha_i (x_i - x'_i)^2`
 
     :param x:
     :param x_prime:
@@ -32,7 +38,11 @@ def matern_kernel(
     x: jnp.ndarray, x_prime: jnp.ndarray,
     alpha_0: float, v: float
 ):
-    """
+    r"""
+    Matern kernel defined as
+
+    ..math::
+        \Sigma(x,x') \coloneqq \alpha_0 \frac{2^{1 - v}{\Gamma(v} \left(\sqrt{2v}||x - x'||\right)^v K_\left(\sqrt{2v}||x - x'||\right)v
 
     :param x:
     :param x_prime:
@@ -52,7 +62,11 @@ def rbf_kernel(
     x: jnp.ndarray, x_prime: jnp.ndarray,
     sigma_square: float
 ):
-    """
+    r"""
+    Radial base function kernel defined as
+
+    ..math::
+        K(x,x') \coloneqq exp\left(-\frac{||x - x'||^2}{2\sigma^2}\right)
 
     :param x:
     :param x_prime:

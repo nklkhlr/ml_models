@@ -31,6 +31,12 @@ class MLPLayer:
 
 
 class MLP(BaseModel):
+    r"""
+    Simple multilayer perceptron implementation. Each layer contains a weight matrix and a
+    bias vector. The forward pass for each layer is computed as  :math: activation(w^TX + b),
+    the backward pass as :math:H_n^T\frac{\delta \mathcal{L}}{\delta Y} for the last layer and as
+    :math:H_{n-1}^T \delta H_{n}. Currently, there is no option for regularization included.
+    """
     def __init__(self, input_dim, hidden_sizes, activation_function):
         super(MLP, self).__init__()
         self.layers = []
@@ -62,6 +68,9 @@ class MLP(BaseModel):
 
 
 class RealNVPNN(MLP):
+    """
+    Neural Network class for the RealNVP implementation
+    """
     def __init__(self, input_dim, hidden_sizes, activation_function):
         super(RealNVPNN, self).__init__(
             input_dim, hidden_sizes, activation_function

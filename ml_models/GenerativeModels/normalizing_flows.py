@@ -13,16 +13,24 @@ jax_seed = jax.random.PRNGKey(42)
 
 class NormalizingFlowModel:
     r"""
-    #Base class for Normalizing Flow models.
+    Base class for Normalizing Flow models.
 
     Estimating the output distribution as:
+
+    ..math::
     p_2(x) = p_1(z) \left| \frac{\delta z}{\delta x} \right| = p_1(z) \left| \frac{\delta f^{-1}(x)}{\delta x} \right|
 
     Multiple Layers:
-    p_K(x) = p_0(z_0) \prod_{i=1}^{K} \left| det\left(\frac{\delta f_i^{-1}(z_i)}{\delta z_i}\right) \right|
-    in log space: log(p_K(x)) = log(p_0(z_0)) + \sum_{i=1}^{K} \left| det\left(\frac{\delta f_i^{-1}(z_i)}{\delta z_i}\right) \right|
 
-    Transformation (f) should be __differentiable__ and __invertible__
+    ..math::
+    p_K(x) = p_0(z_0) \prod_{i=1}^{K} \left| det\left(\frac{\delta f_i^{-1}(z_i)}{\delta z_i}\right) \right|
+
+    in log space:
+
+    ..math::
+    log(p_K(x)) = log(p_0(z_0)) + \sum_{i=1}^{K} \left| det\left(\frac{\delta f_i^{-1}(z_i)}{\delta z_i}\right) \right|
+
+    The transformation function f needs to be __differentiable__ and __invertible__
     """
     def __init__(self, mode: str, **kwargs):
         self.mode = None
