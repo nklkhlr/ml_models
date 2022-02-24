@@ -7,6 +7,8 @@ from jax import jit, vmap
 import jax.numpy as jnp
 # TODO: are there jax implementations of the gamma and modified bessel function?
 from scipy.special import gamma, iv
+# TODO: write jax implementation of eculidean and squared euclidean
+from scipy.spatial.distance import cdist
 
 
 @jit
@@ -29,8 +31,8 @@ def gaussian_kernel(
     :param alpha:
     :return:
     """
-    norm = (x - x_prime) ** 2
-    return alpha_0 * jnp.exp(-(alpha * norm))
+    dist = cdist(x, x_prime, metric="sqeuclidean", w=alpha)
+    return alpha_0 * jnp.exp(-dist)
 
 
 @vmap
@@ -50,17 +52,17 @@ def matern_kernel(
     :param v:
     :return:
     """
-    norm = jnp.abs(x - x_prime)
-    norm *= jnp.sqrt(2 * v)
+    dist = cdist(x, x_prime, metric="euclidean")
+    dist *= jnp.sqrt(2 * v)
     w = alpha_0 * (2**(1 - v)) / gamma(v)
-    return w * norm**v * iv(norm)
+    return w * dist**v * iv(dist)
 
 
 @jit
 @vmap
 def rbf_kernel(
     x: jnp.ndarray, x_prime: jnp.ndarray,
-    sigma_square: float
+    sigma_square: float = 1
 ):
     r"""
     Radial base function kernel defined as
@@ -73,6 +75,5 @@ def rbf_kernel(
     :param sigma_square:
     :return:
     """
-    # TODO: correct norm
-    norm = (x - x_prime)**2
-    return jnp.exp(-norm / (2 * sigma_square))
+    dist = cdist(x, x_prime, metric="sqeuclidean")
+    return jnp.exp(-dist / (2 * sigma_square))
