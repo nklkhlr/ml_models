@@ -8,7 +8,7 @@ import jax.numpy as jnp
 # TODO: are there jax implementations of the gamma and modified bessel function?
 from scipy.special import gamma, iv
 # TODO: write jax implementation of eculidean and squared euclidean
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import cdist, pdist
 
 
 @jit
@@ -59,6 +59,24 @@ def matern_kernel(
 
 
 @jit
+def matern_grad_kernel(x, alpha_0, v):
+    r"""
+    Matern kernel defined as
+
+    ..math::
+        \Sigma(x,x') \coloneqq \alpha_0 \frac{2^{1 - v}{\Gamma(v} \left(\sqrt{2v}||x - x'||\right)^v K_\left(\sqrt{2v}||x - x'||\right)v
+
+    plus its gradient
+
+    :param x:
+    :param alpha_0:
+    :param v:
+    :return:
+    """
+    pass
+
+
+@jit
 @vmap
 def rbf_kernel(
     x: jnp.ndarray, x_prime: jnp.ndarray,
@@ -77,3 +95,18 @@ def rbf_kernel(
     """
     dist = cdist(x, x_prime, metric="sqeuclidean")
     return jnp.exp(-dist / (2 * sigma_square))
+
+
+@jit
+def rbf_grad_kernel(x: jnp.ndarray, sigma_square: float = 1):
+    """
+    Radial base kernel function, which additionally returns the gradient wrt. to :math:`\sigma^2`
+
+    :param x:
+    :param sigma_square:
+    :return:
+    """
+    dist = pdist(x, metric="sqeuclidean")
+    kernel = jnp.exp(-dist / (2 * sigma_square))
+    grad = kernel * (dist / sigma_square)
+    return kernel, grad
