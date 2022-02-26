@@ -140,9 +140,8 @@ class GPR:
         for i in trange(n_train, desc="Gaussian Process Regression"):
             # TODO: implement
             iparams = self.gaussian_process_reset()
-            next_sample = []
-            uparams, ll = self.acquisition.optimize(*iparams)
-            params.append(uparams)
-            llhood.append(ll)
+            optimizer = minimize(lambda p: self.log_likelihood(*p), iparams)
+            params.append(optimizer.x)
+            llhood.append(optimizer.fun)
         idx_opt = np.nanargmin(llhood)
         return params[idx_opt], llhood[idx_opt]
