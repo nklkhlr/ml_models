@@ -4,7 +4,9 @@ These implementations are based on https://arxiv.org/pdf/1807.02811.pdf (Frazier
 from jax import vmap, jit
 import jax.numpy as jnp
 from jax.scipy.stats import norm
-from jax.scipy.optimize import minimize
+# NOTE: jax implementation currently only supports BFGS
+# from jax.scipy.optimize import minimize
+from scipy.optimize import minimize
 
 
 class Acquisition:
@@ -26,8 +28,7 @@ class ExpectedImprovement(Acquisition):
 
     @staticmethod
     @jit
-    @vmap(in_axes=-1)
-    def acquisition(x, mean, sd):
+    def acquisition(x, params):
         r"""
         Expected improvement described by Jones et al. (1998) and Clark (1961) and
         defined as:
@@ -39,19 +40,20 @@ class ExpectedImprovement(Acquisition):
         and :math:`\Delta_n(x) \coloneqq \mu_n(x) - f^*_n`
 
         :param x:
-        :param mean:
-        :param sd:
+        :param params:
         :return:
         """
-        delta_n = -(mean - x)
-        delta_clipped = jnp.clip(delta_n, a_min=0)
-        delta_scaled = delta_n / sd
-        return delta_clipped + sd * norm.cdf(delta_scaled) - abs(delta_n) * norm.pdf(delta_scaled)
+        def acq(x_, mean_, sd_):
+            delta_n = -(mean_ - x_)
+            delta_clipped = jnp.clip(delta_n, a_min=0)
+            delta_scaled = delta_n / sd_
+            return delta_clipped + sd_ * norm.cdf(delta_scaled) - abs(delta_n) * norm.pdf(delta_scaled)
+        return vmap(acq, in_axes=-1)(x, params['mean'], params['sd'])
 
     def optimize(self, X, mean, sd, obs, **kwargs):
-        # default optimizer is the quasi-Newton method mentioned by Frazier 2018
+        # default optimizer is the quasi-Newton method by Frazier 2018
         optimizer = minimize(
-            lambda x: self.acquisition(mean, sd, x),
+            lambda x: self.acquisition(x, {'mean': mean, 'sd': sd}),
             X, method=kwargs.pop('method', 'L-BFGS-B')
         )
         return optimizer.x, optimizer.jac, optimizer.fun

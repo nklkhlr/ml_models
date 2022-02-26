@@ -1,6 +1,11 @@
 import jax
+import numpy as np
 from jax.scipy.linalg import solve, cholesky, cho_solve
+# NOTE: jax implementation currently only supports BFGS
+# from jax.scipy.optimize import minimize
+from scipy.optimize import minimize
 import jax.numpy as jnp
+from functools import partial
 from typing import Union
 from tqdm import trange
 from ml_models.BayesianOptimization import (
@@ -31,18 +36,25 @@ class GPR:
         self.alpha = alpha
         self.n_restarts = n_restarts
 
-    def gaussian_process_reset(self):
+    def gaussian_process_reset(self) -> tuple:
         pass
 
-    def acquisition(self, x_prime: jnp.ndarray, **kwargs):
+    @partial(jax.jit, static_argnums=(0,))
+    def acquisition(self, x_prime: jnp.ndarray):
         # TODO: have optimization with gs or lbfgs
         pred = self.acquisition.acquisition()
         best_pred = jnp.argmin(pred)
         return x_prime[best_pred:best_pred + 1, :]
 
-    def find_next_sample(self):
-        pass
+    def find_next_sample(self, sample_space, n_iterations: int = 10, method="L-BFGS-B"):
+        pos, acq = [], []
+        # TODO: sample x0 from sample_space
+        for i in range(n_iterations):
+            # TODO: acquisiton arguments in an optimized form
+            self.acquisition.optimize()
+        # TODO: best idx from optimal acquisition value/position
 
+    @partial(jax.jit, static_argnums=(0,))
     def posterior(self, X, Y, x_prime, noise: float = 0, **kwargs):
         r"""
         Making new predictions on x' based on the prior previously computed on X by using
@@ -83,6 +95,7 @@ class GPR:
         sigma = self.cov(x_prime, x_prime, **kwargs) - (jnp.dot(solved, cov_update))
         return mu, sigma
 
+    @partial(jax.jit, static_argnums=(0, 3))
     def log_likelihood(self, X, params, include_gradient: bool = False):
         """
         Marginal log_likelihood of the gaussian process with given parameters :math:`\Theta`
@@ -118,14 +131,18 @@ class GPR:
     def objective(self, X, params):
         return self.log_likelihood(X, params, include_gradient=True)
 
-    def surrogate_prediction(self):
-        pass
-
-    def train(self, X, x_primes, n_train):
+    def train(self, n_train):
         # NOTE: Gaussian Process Regression requires its own trainer
         #       and is not compatible with the general purpose
         #       Trainer class
+        # TODO: fori loop
+        llhood, params = [], []
         for i in trange(n_train, desc="Gaussian Process Regression"):
-            # TODO: update posterior using all available data
+            # TODO: implement
+            iparams = self.gaussian_process_reset()
             next_sample = []
-            self.acquisition.optimize()
+            uparams, ll = self.acquisition.optimize(*iparams)
+            params.append(uparams)
+            llhood.append(ll)
+        idx_opt = np.nanargmin(llhood)
+        return params[idx_opt], llhood[idx_opt]
