@@ -80,13 +80,16 @@ class GPR:
             p(y'|Y,X,x') = \mathcal{N}(\mu_n, \Sigma_n)
 
 
+        Parameters
+        ----------
+        X:
+        Y:
+        x_prime:
+        noise:
+        kwargs:
 
-        :param X:
-        :param Y:
-        :param x_prime:
-        :param noise:
-        :param kwargs:
-        :return:
+        Returns
+        -------
         """
         cov_prior = self.cov(X, X, **kwargs) + (noise**2 * jnp.eye(X.shape[0]))
         cov_update = self.cov(X, x_prime, **kwargs)
