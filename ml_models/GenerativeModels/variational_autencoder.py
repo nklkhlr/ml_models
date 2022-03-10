@@ -32,6 +32,59 @@ def vae_train(
     optimizer_args: dict = None, model_args: Tuple[dict, dict] = None,
     model_is_batched: bool = False
 ):
+    """
+    Training a variational encoder
+
+    Parameters
+    ----------
+    rng: int
+        random seed
+    X: jnp.ndarray
+        Training data
+
+    init: Tuple[Callable, Callable]
+        Parameter initialization functions for encoder and decoder
+
+    model: Tuple[Callable, Callable]
+        Encoder and decoder function
+
+    latent_size: int
+        Size of the latent layer
+
+    optimizer: Callable
+        Optimizer function, should follow the same conventions as the
+        optimizers from the optax package
+
+    loss: Callable
+        Loss function. Needs to have the same in- and output as :py:func:`normal_vae_loss`
+
+    n_epochs: int
+        Number of epochs to train
+
+    batch_size: int
+        Number of batches per epoch
+
+    optimizer_args: dict, Optional
+        Keyword arguments to pass to the optimizer
+
+    model_args: Tuple[dict, dict], Optional
+        Keyword arguments to pass to the encoder and decoder (at initialization)
+
+    model_is_batched: bool, default False
+        Whether encoder and decoder functions are already taking entire batches (True)
+        or only single samples (False)
+
+    Returns
+    -------
+    Tuple[any, any, list, list]
+
+        1. Trained encoder parameters
+        2. Trained decoder parameters
+        3. reconstruction loss term per batch
+        4. KL loss per batch
+
+        Note that the sum of reconstruction loss and KL loss yield the ELBO
+    """
     # single sample functions to batch functions + compilation
     if model_is_batched:
         batch_encoder = jax.jit(model[0])
