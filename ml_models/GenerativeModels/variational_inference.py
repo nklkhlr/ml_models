@@ -39,12 +39,27 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 
+
 # ================== #
 # Sampling Functions #
 # ================== #
+# Diagonal Multivariate Normal
+@jax.jit
+def gaussian_init(shape, rng, mean_sd, sigma):
+    mu = jax.random.normal(rng, shape) * mean_sd
+    cov = jnp.ones(shape) * sigma
+    return mu, cov
+
+
 @jax.jit
 def gaussian_kl(mu, sigma_square):
     return -.5 * jnp.sum(1 + jnp.log(sigma_square) - (mu**2 + sigma_square))
+
+
+@jax.jit
+def gaussian_logpdf(x, mu, sigma_square):
+    x_hat = x - mu
+    jnp.einsum('...i,i->...i', x_hat, 1. / jnp.log(sigma_square))
 
 
 @jax.jit
@@ -99,7 +114,7 @@ def single_elbo(sample_fun, log_p_fun, logprob_fun, rng, params):
     mc_sample = sample_fun(rng, *params['sample_params'])
     log_prob = logprob_fun(mc_sample)
     dist_p = log_p_fun(mc_sample, *params['log_p_params'])
-    # variational lower bound =>
+    # variational lower bound => difference instead of ratio (log-space)
     return log_prob - dist_p
 
 
@@ -108,6 +123,7 @@ def vectorized_elbo(sample_fun, log_p_fun, logprop_fun):
 
 
 def elbo(sample_fun, log_p_fun, logprob_fun, rng, params):
+    # random.split to get really random numbers
     random_keys = jax.random.split(rng)
     elbo_estimates = vectorized_elbo(sample_fun, log_p_fun, logprob_fun)(random_keys, params)
     # average elbo estimate of random MC samples
