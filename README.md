@@ -12,8 +12,14 @@ Some types of Generative Models that will be included:
 * (Variational Inference on univariate gaussian mixtures)
 * Variational Autoencoders
 * Generative Adversarial Networks
+* Topological Autoencoder
 
 ## Bayesian Optimization
 
 A collection of Gaussian Process Regression, different acquisition functions, and kernel methods.
 
+## Interpretability
+* Shapely values
+* SHAP
+* LIME
+* GradCam

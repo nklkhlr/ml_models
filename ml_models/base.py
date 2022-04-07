@@ -15,3 +15,25 @@ class BaseModel:
 
     def update_parameters(self, *args, **kwargs):
         raise NotImplemented
+
+
+class BaseModule:
+    def __init__(self):
+        pass
+
+    def init(self, *args, **kwargs):
+        raise NotImplemented
+
+    def apply(self, *args, **kwargs):
+        raise NotImplemented
+
+    def __call__(self, *args, **kwargs):
+        raise NotImplemented
+
+
+class BaseLayer:
+    def __init__(self):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        raise NotImplemented
