@@ -20,7 +20,7 @@ def gaussian_kernel(
     r"""
     Guassian kernel defined as
 
-    ..math::
+    .. math::
         \Sigma(x,x') \coloneqq \alpha_0 exp\left(-||x - x'||^2\right)
 
     where :math:`||x - x'||^2 = \sum_{i=1}^d \alpha_i (x_i - x'_i)^2`
@@ -43,7 +43,7 @@ def matern_kernel(
     r"""
     Matern kernel defined as
 
-    ..math::
+    .. math::
         \Sigma(x,x') \coloneqq \alpha_0 \frac{2^{1 - v}{\Gamma(v} \left(\sqrt{2v}||x - x'||\right)^v K_\left(\sqrt{2v}||x - x'||\right)v
 
     :param x:
@@ -63,7 +63,7 @@ def matern_grad_kernel(x, alpha_0, v):
     r"""
     Matern kernel defined as
 
-    ..math::
+    .. math::
         \Sigma(x,x') \coloneqq \alpha_0 \frac{2^{1 - v}{\Gamma(v} \left(\sqrt{2v}||x - x'||\right)^v K_\left(\sqrt{2v}||x - x'||\right)v
 
     plus its gradient
@@ -85,7 +85,7 @@ def rbf_kernel(
     r"""
     Radial base function kernel defined as
 
-    ..math::
+    .. math::
         K(x,x') \coloneqq exp\left(-\frac{||x - x'||^2}{2\sigma^2}\right)
 
     :param x:

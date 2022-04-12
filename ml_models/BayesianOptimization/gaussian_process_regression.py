@@ -61,22 +61,22 @@ class GPR:
         the posterior :math:`p(y'|Y,X,x')`. Since the covariance matricex of X and x' are
         independent, we can find the posterior covariance as
 
-        ..math::
+        .. math::
             \Sigma_n = \Sigma(x',x') - \Sigma(x',X)\Sigma(X,X)^{-1}\Sigma(X,x')
 
         In the case of noise, :math:`\Sigma(X,X)` is computed as
 
-        ..math::
+        .. math::
             K(X,X) + \sigma_{\epsilon}^2 I
 
         and the mean as
 
-        ..math::
+        .. math::
             \mu_n = \Sigma(x',X)\Sigma(X,X)^{-1}Y
 
         Therefore the posterior is defined as
 
-        ..math::
+        .. math::
             p(y'|Y,X,x') = \mathcal{N}(\mu_n, \Sigma_n)
 
 
@@ -104,7 +104,7 @@ class GPR:
         Marginal log_likelihood of the gaussian process with given parameters :math:`\Theta`
         defined as
 
-        ..math::
+        .. math::
             log p(y|X,\Theta) = -\frac{1}{2} (y - \mu_{\Theta})^T\Sigma_{\Theta}^{-1}(y - \mu_{\Theta} - \frac{1}{2} log |\Sigma_{\Theta}| - \frac{d}{2}log2\pi
 
         This implementation is based on the corresponding scikit-learn implementation, which

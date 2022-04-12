@@ -33,7 +33,7 @@ class ExpectedImprovement(Acquisition):
         Expected improvement described by Jones et al. (1998) and Clark (1961) and
         defined as:
 
-        ..math::
+        .. math::
             EI(x) \coloneqq \left[\Delta_n(x)\right]^+ + \sigma_n(x)\phi\left(\frac{\Delta_n(x)}{\sigma_n(x)}\right) - \left|\Delta_n(x)\right| \Phi\left(\frac{\Delta_n(x)}{\sigma_n(x)}\right)
 
         where :math:`\phi` is the cumulative density function and :math:`\Phi` is the probability density function

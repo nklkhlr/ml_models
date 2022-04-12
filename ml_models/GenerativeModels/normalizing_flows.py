@@ -17,17 +17,17 @@ class NormalizingFlowModel:
 
     Estimating the output distribution as:
 
-    ..math::
+    .. math::
     p_2(x) = p_1(z) \left| \frac{\delta z}{\delta x} \right| = p_1(z) \left| \frac{\delta f^{-1}(x)}{\delta x} \right|
 
     Multiple Layers:
 
-    ..math::
+    .. math::
     p_K(x) = p_0(z_0) \prod_{i=1}^{K} \left| det\left(\frac{\delta f_i^{-1}(z_i)}{\delta z_i}\right) \right|
 
     in log space:
 
-    ..math::
+    .. math::
     log(p_K(x)) = log(p_0(z_0)) + \sum_{i=1}^{K} \left| det\left(\frac{\delta f_i^{-1}(z_i)}{\delta z_i}\right) \right|
 
     The transformation function f needs to be __differentiable__ and __invertible__

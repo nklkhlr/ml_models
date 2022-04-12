@@ -5,7 +5,7 @@ VI casts inference as an optimization problem by approximating the true
 (intractable) probability distribution :math:`p`. This is done by finding a :math:`q \in \mathcal{Q}`
 that has the highest similarity to :math:`p`, measured by the Kullback-Leibler Divergence
 
-..math::
+.. math::
     KL(q||p) = \sum_{x} q(x) log \frac{q(x)}{p(x)}
 
 Since this divergence contains the intractable distribution :math:`p`, the optimization
@@ -13,13 +13,13 @@ is not on :math:`KL(q||p)` itself, but the Evidence Lower Bound (ELBO).
 
 The ELBO is defined as
 
-    ..math::
+    .. math::
         ELBO(q) \coloneqq \sum_x q(x) log \frac{q(x)}{\hat{p}(x)}
 
     It is a lower bound for log :math:`Z(\Theta)`, the normalization constant of a factor
     distribution :math:`p`, because
 
-    ..math::
+    .. math::
         ELBO(q) &= \sum_x q(x) log \frac{q(x)}{\tilde{p}(x)}
                 &= \sum_x q(x) log \frac{q(x)}{p(x)} - log Z(\Theta)
                 &= KL(q||p) - log Z(\Theta)

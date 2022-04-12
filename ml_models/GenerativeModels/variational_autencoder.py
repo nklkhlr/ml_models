@@ -3,8 +3,15 @@ import jax
 import jax.numpy as jnp
 
 
-def generate_batches(batch_size: int) -> jnp.ndarray:
-    pass
+def generate_batches(rng, n_samples: int, batch_size: int) -> list:
+    x_shuff = jax.random.shuffle(rng, jnp.arange(n_samples))
+    n_steps = x_shuff.size // batch_size
+    return [
+        x_shuff[(batch_size * i):(batch_size * (i + 1))]
+        if batch_size * (i + 1) < n_steps
+        else x_shuff[(batch_size * i):]
+        for i in range(n_steps)
+    ]
 
 
 @jax.jit
@@ -114,7 +121,7 @@ def vae_train(
     kl_loss = []
     # TODO: add in train vs. test loss
     for epoch in range(n_epochs):
-        batches = generate_batches(batch_size)
+        batches = generate_batches(grad_key, X.shape[0], batch_size)
         for i, batch in enumerate(batches):
             grad_key, loss_key = jax.random.split(grad_key)
             encoder_params, decoder_params = opt_params(opt_state)
